@@ -1,40 +1,14 @@
-# Containerized Full-Stack Application with CI/CD
+# Setup & Deployment Guide
 
-A modern, containerized full-stack application with automated CI/CD pipeline deployment. This project demonstrates best practices in containerization, reverse proxy configuration, and automated deployment.
-
-## 📋 Features
-
-- **Frontend**: React application with TypeScript
-- **Backend**: Node.js/Express API
-- **Containerization**: Docker with multi-stage builds
-- **Reverse Proxy**: NGINX configuration
-- **CI/CD**: Automated GitHub Actions pipeline
-- **Security**: Environment variables and secure headers
-
-## 🏗️ Architecture
-
-```
-├── frontend/                # React frontend application
-│   ├── Dockerfile          # Frontend production Dockerfile
-│   └── nginx/              # NGINX configuration
-│       └── nginx.conf      # Reverse proxy configuration
-├── backend/                # Node.js backend API
-│   └── Dockerfile         # Backend production Dockerfile
-├── .github/workflows/     # GitHub Actions CI/CD configuration
-│   └── deploy.yml        # Deployment workflow
-└── docker-compose.yml     # Local development orchestration
-```
-
-## 🚀 Quick Start
+## Setup Instructions
 
 ### Prerequisites
-- Docker and Docker Compose
-- Node.js 18+
-- Git
-- GitHub Account
+- AWS Account (2 EC2 instances - t2.micro)
 - Docker Hub Account
+- GitHub Account
+- Node.js (v16 or higher)
 
-### Local Development
+### Local Setup
 
 1. Clone the repository:
 ```bash
@@ -55,44 +29,42 @@ NODE_ENV=development
 PORT=3000
 ```
 
-3. Start the application:
+3. Run locally:
 ```bash
 docker-compose up --build
 ```
 
-Access the applications:
+Access at:
 - Frontend: http://localhost:80
-- Backend API: http://localhost:3000
-- Health Check: http://localhost:3000/health
+- Backend: http://localhost:3000
 
-## 🌐 Production Deployment
+## Deployment Instructions
 
-### Server Requirements
+### 1. EC2 Setup
 
-1. Two servers (EC2 t2.micro or equivalent):
-   - Server 1: Frontend + NGINX
-   - Server 2: Backend API
+On both frontend and backend servers:
+```bash
+sudo apt update
+sudo apt install docker.io -y
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ubuntu
+```
 
-2. Security Group Configuration:
-   
-   Frontend Server:
-   ```
-   Inbound Rules:
-   - HTTP (80)
-   - HTTPS (443)
-   - SSH (22)
-   ```
+### 2. Security Group Configuration
 
-   Backend Server:
-   ```
-   Inbound Rules:
-   - Custom TCP (3000)
-   - SSH (22)
-   ```
+Frontend Server:
+- HTTP (Port 80)
+- HTTPS (Port 443)
+- SSH (Port 22)
 
-### GitHub Actions Setup
+Backend Server:
+- Custom TCP (Port 3000)
+- SSH (Port 22)
 
-1. Required GitHub Secrets:
+### 3. GitHub Actions Setup
+
+Add these secrets to your GitHub repository:
 ```plaintext
 DOCKER_PASSWORD=<docker-hub-password>
 FRONTEND_HOST=<frontend-server-ip>
@@ -102,88 +74,74 @@ SSH_PRIVATE_KEY=<ssh-private-key>
 BACKEND_URL=http://<backend-server-ip>:3000
 ```
 
-2. Deployment:
-- Automatic deployment on push to main branch
-- Manual deployment: Go to Actions tab and run workflow
+### 4. Deployment
 
-## 🔒 Security Features
+1. Automatic deployment:
+   - Push changes to main branch
 
-1. NGINX Security Headers:
-   - X-Frame-Options
-   - X-XSS-Protection
-   - X-Content-Type-Options
+2. Verify deployment:
+   - Frontend: http://<frontend-public-ip>
+   - Backend: http://<backend-public-ip>:3000
 
-2. Environment Variables:
-   - Sensitive data stored in GitHub Secrets
-   - Local environment files for development
+### 5. Troubleshooting
 
-3. Docker Security:
-   - Multi-stage builds
-   - Minimal base images
-   - No root user in containers
+Check container status:
+```bash
+docker ps
+docker logs <container-id>
+```
+```
 
-## 📊 Monitoring
+# Additional Things
 
-1. Health Check Endpoints:
-   - Frontend: http://<frontend-ip>/
-   - Backend: http://<backend-ip>:3000/health
+## Project Architecture
+- Frontend: React.js application served through NGINX web server
+- Backend: Node.js REST API service
+- Container Platform: Docker with multi-container orchestration
+- CI/CD: GitHub Actions pipeline
+- Cloud Infrastructure: AWS EC2 instances
+
+## Port Configuration
+- Frontend Application: Port 80 (HTTP)
+- Backend API Server: Port 3000
+- NGINX: Port 80 (proxies requests to frontend)
+- SSH Access: Port 22 (both servers)
+
+## Health Check Endpoints
+- Frontend Health: http://<frontend-ip>/
+- Backend Health: http://<backend-ip>:3000/health
+- API Status: http://<backend-ip>:3000/health
+
+## Docker Compose Development
+```bash
+# Start all services
+docker-compose up --build
+
+# Start specific service
+docker-compose up frontend
+docker-compose up backend
+
+# View logs
+docker-compose logs
+
+# Stop services
+docker-compose down
+```
+
+## Monitoring Deployment
+1. GitHub Actions Logs:
+   - Navigate to repository on GitHub
+   - Click "Actions" tab
+   - Select latest workflow run
+   - View detailed logs for each step
 
 2. Container Logs:
 ```bash
-# View container logs
-docker logs frontend
-docker logs backend
+# View real-time container logs
+docker logs -f <container-id>
 
-# NGINX logs
+# View NGINX logs
+docker exec frontend cat /var/log/nginx/access.log
 docker exec frontend cat /var/log/nginx/error.log
 ```
-
-## 🔧 Troubleshooting
-
-1. Container Issues:
-```bash
-# Check container status
-docker ps
-docker ps -a  # include stopped containers
-
-# Container logs
-docker logs <container-id>
 ```
-
-2. Common Issues:
-   - Port conflicts: Check if ports 80/3000 are available
-   - Environment variables: Verify .env files exist
-   - Network issues: Check security group configurations
-
-## 📝 Development Guidelines
-
-1. Code Changes:
-```bash
-# Frontend development
-cd frontend
-npm install
-npm start
-
-# Backend development
-cd backend
-npm install
-npm run dev
-```
-
-2. Testing Changes:
-```bash
-# Local testing with Docker
-docker-compose up --build
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit changes
-4. Push to the branch
-5. Create a Pull Request
-
-## 📄 License
-
-MIT License - See LICENSE file for details 
